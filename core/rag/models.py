@@ -1,14 +1,29 @@
+import os
+import string
+import random
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
-import os
 
 
+def generate_unique_course_code():
+    chars = string.ascii_uppercase + string.digits
+    while True:
+        code = ''.join(random.choices(chars, k=6))
+        if not Course.objects.filter(code=code).exists():
+            return code
+        
+        
 class Course(models.Model):
     name = models.CharField(max_length=255)
-    code = models.CharField(max_length=50, unique=True)
+    code = models.CharField(max_length=50, unique=True, editable=False) 
     description = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    
+    def save(self, *args, **kwargs):
+        if not self.code:
+            self.code = generate_unique_course_code()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.name} ({self.code})"
@@ -30,7 +45,7 @@ class Document(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='documents')
     title = models.CharField(max_length=255, blank=True)
     file = models.FileField(upload_to='documents/')
-    uploaded_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    uploaded_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, editable=False)
     uploaded_at = models.DateTimeField(auto_now_add=True)
     processed = models.BooleanField(default=False)
 

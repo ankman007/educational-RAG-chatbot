@@ -2,6 +2,7 @@ from django.contrib import admin
 from .models import Course, Enrollment, Document, DocumentChunk
 from .form import DocumentForm
 
+
 class EducatorAdminMixin:
     def has_module_permission(self, request):
         return request.user.is_superuser or request.user.groups.filter(name__in=['Educator', 'Admin']).exists()
@@ -27,8 +28,9 @@ class CourseAdmin(EducatorAdminMixin, admin.ModelAdmin):
 @admin.register(Document)
 class DocumentAdmin(EducatorAdminMixin, admin.ModelAdmin):
     form = DocumentForm
+    exclude = ['uploaded_by', 'processed'] 
 
-    list_display = ("title", "course", "uploaded_by", "uploaded_at")
+    list_display = ("title", "course", "uploaded_at")
 
     def has_module_permission(self, request):
         return request.user.is_superuser or request.user.groups.filter(name__in=['Educator', 'Admin']).exists()
@@ -51,3 +53,16 @@ class DocumentChunkAdmin(admin.ModelAdmin):
 
     def has_module_permission(self, request):
         return request.user.is_superuser or request.user.groups.filter(name='Admin').exists()
+
+    def has_view_permission(self, request, obj=None):
+        return request.user.is_superuser or request.user.groups.filter(name='Admin').exists()
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
